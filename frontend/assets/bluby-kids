@@ -1,0 +1,8 @@
+@font-face {
+    font-family: 'Bluby Kids';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Bluby Kids'), url('https://fonts.cdnfonts.com/s/106129/BlubyKids-Regular.woff') format('woff');
+}
+
+

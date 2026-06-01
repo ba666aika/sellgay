@@ -80,13 +80,17 @@ class Handler(BaseHTTPRequestHandler):
             return
         self.send_response(200)
         self._cors_and_cache(ctype)
-        # Strict CSP on every HTML page. All JS/CSS is first-party and there
-        # are no inline scripts, so `script-src 'self'` holds site-wide.
+        # Relaxed CSP: this is a static marketing page (no wallet connect) that
+        # uses inline scripts, CDN fonts, and the Twitter embed widget.
         if fs_path.endswith(".html"):
             self.send_header(
                 "Content-Security-Policy",
-                "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-                "img-src 'self' data: blob:; connect-src 'self'",
+                "default-src 'self' https: data: blob: 'unsafe-inline'; "
+                "script-src 'self' 'unsafe-inline' https:; "
+                "style-src 'self' 'unsafe-inline' https:; "
+                "font-src 'self' data: https:; "
+                "img-src 'self' data: blob: https:; "
+                "frame-src 'self' https:; connect-src 'self' https:",
             )
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
@@ -223,10 +227,28 @@ class Handler(BaseHTTPRequestHandler):
             ctype = "image/svg+xml"
         elif safe.endswith(".png"):
             ctype = "image/png"
+        elif safe.endswith(".jpg") or safe.endswith(".jpeg"):
+            ctype = "image/jpeg"
+        elif safe.endswith(".webp"):
+            ctype = "image/webp"
+        elif safe.endswith(".gif"):
+            ctype = "image/gif"
+        elif safe.endswith(".ico"):
+            ctype = "image/x-icon"
         elif safe.endswith(".woff2"):
             ctype = "font/woff2"
+        elif safe.endswith(".woff"):
+            ctype = "font/woff"
         elif safe.endswith(".ttf"):
             ctype = "font/ttf"
+        elif safe.endswith(".eot"):
+            ctype = "application/vnd.ms-fontobject"
+        elif safe.endswith(".mp4"):
+            ctype = "video/mp4"
+        elif safe.endswith(".webm"):
+            ctype = "video/webm"
+        elif safe.endswith(".webmanifest"):
+            ctype = "application/manifest+json"
         elif safe.endswith(".json"):
             ctype = "application/json"
         self._send_file(fs_path, ctype)
