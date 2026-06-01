@@ -30,9 +30,71 @@ def _spawn(args: list[str], env: dict) -> subprocess.Popen:
     return subprocess.Popen(args, env=env, stdout=sys.stdout, stderr=sys.stderr)
 
 
+_STATE_FILES = (
+    "loyalty_state.json",   # held_seconds per wallet — the loyalty clock
+    "stats.json",
+    "payouts.jsonl",
+    "last_airdrop_at.txt",
+    "last_claim_at.txt",
+    "engaged_allowlist.json",
+)
+
+
+def _wipe_state(data_dir: str, reason: str) -> None:
+    removed = []
+    for name in _STATE_FILES:
+        path = os.path.join(data_dir, name)
+        try:
+            os.remove(path)
+            removed.append(name)
+        except FileNotFoundError:
+            pass
+        except OSError as exc:
+            print(f"[start] could not remove {path}: {exc}", flush=True)
+    print(f"[start] WIPED state ({reason}): {removed or 'nothing to remove'}", flush=True)
+
+
+def _maybe_wipe_state(data_dir: str) -> None:
+    """Reset persisted state (held_seconds / stats / payouts) at container boot,
+    BEFORE the bot loads it — so a wipe can never race the bot's per-tick save.
+
+    Two triggers:
+      1. WIPE_DATA=1 — explicit one-shot wipe (remove the var after it runs once).
+      2. mint change — LOYALTY_MINT differs from the last launch. A new coin means
+         a fresh loyalty clock; old holders are irrelevant. Tracked via
+         <data>/mint.txt so it fires exactly once per new mint and never wipes an
+         unchanged launch (no footgun on a normal redeploy).
+    """
+    if (os.environ.get("WIPE_DATA") or "").strip().lower() in ("1", "true", "yes", "on"):
+        _wipe_state(data_dir, "WIPE_DATA set")
+
+    mint = (os.environ.get("LOYALTY_MINT") or "").strip()
+    if not mint:
+        return
+    marker = os.path.join(data_dir, "mint.txt")
+    try:
+        with open(marker, "r", encoding="utf-8") as f:
+            prev = f.read().strip()
+    except FileNotFoundError:
+        prev = ""
+    if prev and prev != mint:
+        _wipe_state(data_dir, f"mint changed {prev[:8]}… -> {mint[:8]}…")
+    if prev != mint:
+        try:
+            with open(marker, "w", encoding="utf-8") as f:
+                f.write(mint)
+        except OSError as exc:
+            print(f"[start] could not write mint marker {marker}: {exc}", flush=True)
+
+
 def main() -> NoReturn:
-    # Ensure /data exists (Railway volume mount, but may be absent in local dev).
-    os.makedirs("/data", exist_ok=True)
+    data_dir = os.environ.get("DATA_DIR") or "/data"
+    # Ensure the data dir exists (Railway volume mount, may be absent in local dev).
+    os.makedirs(data_dir, exist_ok=True)
+
+    # Reset persisted state at boot if requested / on a new mint — BEFORE the bot
+    # process loads it, so the wipe can't race the bot's per-tick save.
+    _maybe_wipe_state(data_dir)
 
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
