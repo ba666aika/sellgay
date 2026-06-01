@@ -173,6 +173,36 @@ def _snapshot_loyalty_holders(token_program: str) -> dict[str, int]:
 
 # -------- claim → operator cut → buyback --------
 
+def _confirm_signatures(sigs: list, timeout_s: float = 20.0) -> None:
+    """Block until each claim signature lands ('confirmed'/'finalized') before we
+    measure the wallet delta.
+
+    `send_raw_tx` returns on SUBMIT, not on confirmation. Reading the wallet
+    balance immediately after the claim therefore sees the just-credited creator
+    fee as 0, so `claimed = after - before` is ~0 and the buyback is wrongly
+    skipped (the fee then just sits in the wallet). Waiting here is the fix for
+    "it claims fees but never buys back". Best-effort: on timeout or an RPC blip
+    we proceed anyway and the balance read reflects whatever has landed so far.
+    """
+    pending = {s for s in sigs if s}
+    if not pending:
+        return
+    deadline = time.time() + timeout_s
+    while pending and time.time() < deadline:
+        keys = list(pending)
+        try:
+            statuses = rpc.get_signature_statuses(keys)
+        except RPCError:
+            return
+        for sig, st in zip(keys, statuses):
+            # done == landed (confirmed/finalized) OR failed (err set: it will
+            # never deliver a fee, so stop waiting on it).
+            if st and (st.get("confirmationStatus") in ("confirmed", "finalized") or st.get("err") is not None):
+                pending.discard(sig)
+        if pending:
+            time.sleep(1.0)
+
+
 def _claim_cut_buyback() -> dict[str, int]:
     """Claim creator fees, pay the operator, buy back $LOYALTY with the rest.
 
@@ -192,8 +222,14 @@ def _claim_cut_buyback() -> dict[str, int]:
     # Two independent claims; each logs + swallows its own failure so one can't
     # block the other. Pre-migration coins only have bonding-curve fees; the AMM
     # claim self-skips when there is no creator-vault ATA yet.
-    pumpfun.claim_bonding_curve()
-    pumpfun.claim_amm()
+    sig_bond = pumpfun.claim_bonding_curve()
+    sig_amm = pumpfun.claim_amm()
+    # CRITICAL: wait for the claims to LAND before measuring the delta. send is
+    # fire-and-forget (returns on submit), so an immediate balance read misses
+    # the just-credited fee → claimed reads ~0 → buyback wrongly skipped. This
+    # is the fix for "claims fees but never buys back". No threshold: any
+    # positive delta, however small, flows to operator cut + buyback below.
+    _confirm_signatures([sig_bond, sig_amm])
 
     try:
         after = rpc.get_sol_balance(wallet)

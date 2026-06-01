@@ -71,7 +71,10 @@ def buyback(lamports: int) -> Optional[str]:
         print(f"[swap] DRY_RUN: would buy back with {lamports} lamports ({lamports/1e9:.6f} SOL)")
         return None
 
-    for pool in ("auto", _FALLBACK_POOL):
+    # auto first (PumpPortal picks), then explicit bonding-curve ("pump") for a
+    # coin still on the curve, then the post-migration AMM pool. Covers a coin at
+    # any stage — not-yet-bonded OR graduated.
+    for pool in ("auto", "pump", _FALLBACK_POOL):
         try:
             tx_bytes = _request_unsigned_tx(lamports, pool)
             return _sign_and_send(tx_bytes, label=f"buyback({pool})")
