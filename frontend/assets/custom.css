@@ -659,7 +659,10 @@ https://ryanmulligan.dev/blog/css-property-new-style/
 .usug-hero { display: block; }
 .usug-hero-bg {
     position: absolute; inset: 0; z-index: 0;
-    background: url(../img/home.jpeg) center center / cover no-repeat;
+    /* anchor to the bottom: the characters live along the bottom edge, so on any
+       viewport the crop eats the sky at the top, never the chads at the bottom. */
+    background: url(../img/home.jpeg) center bottom / cover no-repeat;
+    background-color: #2C1574;
 }
 /* keep the art almost fully visible: only a faint darkening at the very top
    (so the navbar reads) and the very bottom (transition to the next section). */
