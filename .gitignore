@@ -1,0 +1,33 @@
+# Secrets — never commit
+.env
+.env.*
+*.key
+*.pem
+wallet*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Runtime state (Railway volume; never local)
+/data/
+
+# Build artifacts (none expected — vanilla JS, but just in case)
+node_modules/
+dist/
+build/

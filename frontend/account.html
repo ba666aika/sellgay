@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>your loyalty</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="booting">
+  <main class="container narrow wrap">
+    <header class="page-head">
+      <h1>Your loyalty</h1>
+      <p class="sub">How long this wallet has held, and what share of the next airdrop that earns. Live.</p>
+    </header>
+
+    <section id="connect" class="panel">
+      <p>Connect a Solana wallet to read its held time and current share.</p>
+      <button id="btn-connect" class="btn primary">Connect wallet</button>
+      <div class="providers">
+        <span data-provider="phantom">Phantom</span>
+        <span data-provider="solflare">Solflare</span>
+        <span data-provider="backpack">Backpack</span>
+      </div>
+      <p class="note">Read-only. We only request your public address. We never request a transaction signature.</p>
+    </section>
+
+    <section id="me" class="panel hidden">
+      <div class="readout">
+        <div class="hero-stat">
+          <p class="label">Held for</p>
+          <p class="value" id="me-held">—</p>
+        </div>
+        <div class="grid">
+          <div><p class="label">Wallet</p><p class="v" id="me-wallet">—</p></div>
+          <div><p class="label">Current share</p><p class="v amber" id="me-share">—</p></div>
+          <div><p class="label">Balance</p><p class="v" id="me-balance">—</p></div>
+        </div>
+        <div class="actions">
+          <button id="btn-disconnect" class="btn">Disconnect</button>
+        </div>
+      </div>
+    </section>
+
+    <nav class="linkrow">
+      <a href="/">← Home</a>
+      <a href="/bubblemap">The board</a>
+    </nav>
+  </main>
+  <script src="/account.js"></script>
+</body>
+</html>

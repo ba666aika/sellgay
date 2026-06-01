@@ -1,0 +1,350 @@
+/* loyalty — "cartoon room / wagmi" (single page). See DESIGN.md.
+   A hand-drawn cartoon bedroom (room.png) IS the page. Everything on top is inked
+   to match it: comic faces, bold ink outlines on flat fills, hard offset shadows
+   (0 blur) for sticker depth, and buttons that physically press down. The bubble
+   field is hand-drawn too: each marble is a wobbly closed SVG path (seeded per
+   wallet so its shape is stable) with a thick ink stroke, bright per-wallet fill.
+   A hugging-figures mascot is pinned to the bottom-left. Optional procedural
+   ambient sound (ambient.js). No gradient text, no glassmorphism, no nested
+   cards, no neon. Two local images (room.png, hug.png).
+
+   Fonts are self-hosted under /fonts so the strict CSP (default-src 'self')
+   still holds: Comic Neue for display + body, Comic Mono for the figures/
+   addresses so ticking numbers stay monospaced but still look inked.
+   --ink is the shared cartoon outline color. */
+@font-face {
+  font-family: "Comic Neue"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fonts/comic-neue-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Comic Neue"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/fonts/comic-neue-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Comic Mono"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fonts/comic-mono.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Comic Mono"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/fonts/comic-mono-bold.ttf") format("truetype");
+}
+
+:root {
+  /* the photo is the page; content sits directly on it in white ink.
+     a dark veil over the photo keeps white text legible everywhere. */
+  --on:        oklch(0.985 0.004 220);   /* primary text on the photo */
+  --on-soft:   oklch(0.930 0.010 220);   /* secondary text */
+  --on-faint:  oklch(0.840 0.014 222);   /* meta, labels */
+  --on-line:   oklch(1 0 0 / 0.22);      /* hairlines on the photo */
+  --accent-on: var(--on);                /* highlight: all white for now (green retired) */
+  --field:      oklch(0.20 0.030 252 / 0.42); /* translucent input field */
+  --field-line: oklch(1 0 0 / 0.40);
+  --text-veil: 0 1px 2px oklch(0.16 0.03 250 / 0.60), 0 1px 12px oklch(0.14 0.03 250 / 0.30);
+  --veil-floor: oklch(0.215 0.030 250);  /* slate floor under the photo; matches the veil so white stays legible */
+
+  --reset:     oklch(0.74 0.140 28);     /* error text, legible on the veil */
+
+  --font-display: "Comic Neue", "Comic Sans MS", system-ui, sans-serif;
+  --font-body:    "Comic Neue", "Comic Sans MS", system-ui, sans-serif;
+  --font-mono:    "Comic Mono", "Comic Sans MS", ui-monospace, monospace;
+  --ink:          oklch(0.24 0.022 65);   /* warm near-black, the cartoon outline color */
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-sm: 0 1px 2px oklch(0.4 0.05 235 / 0.06), 0 2px 8px oklch(0.4 0.05 235 / 0.06);
+  --shadow:    0 4px 12px oklch(0.4 0.05 235 / 0.08), 0 22px 50px oklch(0.4 0.06 235 / 0.12);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  color: var(--on);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  background: var(--veil-floor);
+}
+
+/* the photo: a fixed layer that exactly covers the viewport (inset:0, so it never
+   depends on vh) and is scaled up a touch for slack, so the small scroll drift
+   (parallax.js sets --bgY) can never reveal an edge. */
+body::before {
+  content: ""; position: fixed; z-index: -2; inset: 0;
+  background: url("/img/room.png") center center / cover no-repeat;
+  transform: scale(1.05) translate3d(0, var(--bgY, 0px), 0);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* the slate veil over the photo, fixed so white text stays legible in view */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg,
+    oklch(0.16 0.03 250 / 0.16) 0%,
+    oklch(0.16 0.03 250 / 0.08) 45%,
+    oklch(0.16 0.03 250 / 0.20) 100%);
+}
+
+::selection { background: var(--accent-on); color: oklch(0.18 0.04 250); }
+
+a { color: var(--accent-on); text-decoration: none; border-bottom: 1px solid var(--on-line); }
+a:hover { border-bottom-color: var(--accent-on); }
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.container { max-width: 1120px; margin: 0 auto; padding: 0 1.5rem; }
+.wrap { width: 100%; }
+
+/* lander fills exactly one viewport, no scroll: the title block sits at the top
+   and the bubble field flexes to fill whatever height is left. No-scroll is
+   enforced on html/body below (not here) so the bubble layer can be dragged out
+   past this 1120px column — its only boundary is the real screen edge. */
+html:has(main.lander), body:has(main.lander) { overflow: hidden; }
+main.lander {
+  height: 100dvh; min-height: 0;
+  display: flex; flex-direction: column; overflow: visible;
+}
+
+/* ---- masthead: big wordmark, content directly on the photo ---- */
+.topbar {
+  flex: 0 0 auto;
+  display: flex; align-items: flex-start; justify-content: flex-end;
+  flex-wrap: wrap; gap: 0.8rem 1.5rem;
+  margin: clamp(0.8rem, 2.5vh, 1.6rem) 0 clamp(0.3rem, 1vh, 0.8rem); padding: 0;
+}
+/* big centered wordmark opens the page */
+.brandmark {
+  display: block; text-align: center; margin: 0 auto; max-width: none;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(2.2rem, min(12vw, 11vh), 7rem); line-height: 0.92;
+  letter-spacing: -0.01em; color: var(--on);
+  -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill;
+  text-shadow: 3px 5px 0 oklch(0.24 0.022 65 / 0.30);
+}
+.topbar-right { display: inline-flex; align-items: center; gap: 1rem; padding-top: 0.6rem; }
+.live-dot { display: inline-block; width: 0.42rem; height: 0.42rem; border-radius: 50%; background: var(--accent-on); margin-left: 0.4rem; animation: pulse 1.5s var(--ease) infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+/* sound toggle */
+.sound-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font: inherit; font-size: 0.8rem; font-weight: 700; font-family: var(--font-mono); color: var(--ink);
+  background: oklch(0.96 0.022 88 / 0.92); border: 2px solid var(--ink); border-radius: 8px;
+  padding: 0.35rem 0.75rem; cursor: pointer; text-shadow: none;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 0.12s var(--ease), box-shadow 0.12s var(--ease), background 0.15s var(--ease);
+}
+.sound-btn:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.sound-btn.on { background: oklch(0.86 0.16 95 / 0.95); color: var(--ink); }
+.sound-btn .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.sound-btn .eq i { width: 2.5px; height: 4px; background: currentColor; border-radius: 1px; opacity: 0.55; }
+.sound-btn.on .eq i { animation: eq 0.9s var(--ease) infinite; }
+.sound-btn.on .eq i:nth-child(2) { animation-delay: 0.15s; }
+.sound-btn.on .eq i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes eq { 0%,100% { height: 4px; opacity: 0.55; } 50% { height: 12px; opacity: 1; } }
+
+/* community link (topbar) + cabinet "make a post" CTA */
+.community-link {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--ink);
+  text-decoration: none; margin-right: 0.5rem;
+  background: oklch(0.86 0.16 95 / 0.95); border: 2px solid var(--ink); border-radius: 8px;
+  padding: 0.35rem 0.75rem; box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 0.12s var(--ease), box-shadow 0.12s var(--ease);
+}
+.community-link:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.lr-cta { margin-top: 0.7rem; text-decoration: none; }
+/* must beat the display from .community-link / .btn (same specificity) */
+.community-link.hidden, .lr-cta.hidden { display: none !important; }
+
+/* ---- hero stage (directly on the photo, no panel) ---- */
+.stage { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 0; }
+.stage-head { flex: 0 0 auto; margin: 0 0 clamp(0.6rem, 2vh, 1.4rem); padding: 0; text-align: center; }
+
+/* ---- wallet lookup (read-only, no connect) ---- */
+.lookup { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin: clamp(1rem, 3vh, 2rem) auto 0; max-width: 620px; }
+.lookup-input {
+  flex: 1 1 20rem; min-width: 0;
+  font: inherit; font-family: var(--font-mono); font-size: 0.92rem; color: var(--ink);
+  caret-color: var(--ink);
+  background: oklch(0.96 0.022 88);
+  border: 2.5px solid var(--ink); border-radius: 8px;
+  padding: 0.8rem 1.25rem; text-align: left;
+  box-shadow: 3px 3px 0 oklch(0.24 0.022 65 / 0.9);
+  transition: box-shadow 0.18s var(--ease);
+}
+.lookup-input::placeholder { color: oklch(0.45 0.02 80); }
+.lookup-input:focus {
+  outline: none;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.lookup .btn { flex: 0 0 auto; }
+.lookup-error { color: var(--reset); font-size: 0.82rem; margin: 0.6rem 0 0; text-align: center; text-shadow: var(--text-veil); }
+.lookup-error.hidden { display: none; }
+
+.lookup-result {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start;
+  gap: 0.9rem clamp(1.6rem, 4vw, 3rem);
+  margin: clamp(0.8rem, 2vh, 1.4rem) auto 0; padding: 0;
+}
+.lookup-result.hidden { display: none; }
+.lr-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.4rem; min-width: 0; }
+.lr-item.lr-wide { flex-basis: 100%; }
+.lr-label { font-family: var(--font-body); font-size: 0.8rem; font-weight: 500; letter-spacing: 0.005em; color: var(--on-faint); text-shadow: var(--text-veil); }
+.lr-v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; line-height: 1; font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 700; letter-spacing: -0.01em; color: var(--on); -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; text-shadow: 1px 2px 0 oklch(0.24 0.022 65 / 0.22); }
+.lr-v.accent { color: var(--accent-on); font-weight: 600; }
+.lr-v.reset { color: var(--reset); }
+.lr-wide .lr-v { font-size: 1rem; font-weight: 500; }
+
+/* base heading (account + bubblemap pages; index's wordmark overrides via .brandmark) */
+h1 {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(2rem, 5.5vw, 3.4rem); line-height: 1.04;
+  letter-spacing: -0.01em; margin: 0 0 0.85rem; max-width: 18ch;
+  color: var(--on);
+  -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill;
+  text-shadow: 2px 3px 0 oklch(0.24 0.022 65 / 0.26);
+}
+
+/* tagline beneath the wordmark */
+.tagline {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(0.95rem, min(2.6vw, 2.6vh), 1.5rem); line-height: 1.22;
+  letter-spacing: -0.005em; color: var(--on);
+  margin: 0.5rem auto 0; max-width: 42ch; text-align: center;
+  -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill;
+  text-shadow: 1px 2px 0 oklch(0.24 0.022 65 / 0.25);
+}
+/* eligibility rule, one quiet line under the tagline */
+.rule {
+  font-family: var(--font-body); font-weight: 500;
+  font-size: clamp(0.82rem, min(1.9vw, 1.9vh), 1rem); line-height: 1.4;
+  color: var(--on-faint); margin: 0.55rem auto 0; max-width: 46ch; text-align: center;
+  text-shadow: var(--text-veil);
+}
+.rule strong { color: var(--accent-on); font-weight: 700; }
+
+/* cabinet note: appears when a looked-up wallet isn't earning yet */
+.lr-note {
+  flex-basis: 100%; margin: 0.2rem 0 0; text-align: center;
+  font-family: var(--font-body); font-size: 0.84rem; font-weight: 500;
+  color: var(--on-faint); text-shadow: var(--text-veil);
+}
+.lr-note.hidden { display: none; }
+
+/* ---- stats row (on the photo, no panel): three big white figures ---- */
+.stats {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start;
+  gap: 0.8rem clamp(1.6rem, 4vw, 3rem);
+  margin: clamp(1rem, 3vh, 2rem) auto 0; padding: 0;
+}
+.stat { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.4rem; flex: 0 1 auto; min-width: 0; }
+.stat-label {
+  font-family: var(--font-body); font-size: 0.8rem; font-weight: 500;
+  letter-spacing: 0.005em;
+  color: var(--on-faint); text-shadow: var(--text-veil);
+}
+.stat-val {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums; line-height: 1;
+  font-size: clamp(1.05rem, min(3vw, 3.2vh), 2rem); font-weight: 700; white-space: nowrap;
+  letter-spacing: -0.01em; color: var(--on);
+  -webkit-text-stroke: 1.2px var(--ink); paint-order: stroke fill;
+  text-shadow: 1px 2px 0 oklch(0.24 0.022 65 / 0.22);
+}
+/* the unit (SOL) sits smaller and fainter than the figure, a quiet ledger detail */
+.stat-val .unit { font-size: 0.42em; font-weight: 600; opacity: 0.62; margin-left: 0.32em; letter-spacing: 0.04em; }
+.stat-val .live-dot { width: 0.5rem; height: 0.5rem; vertical-align: 0.14em; margin-left: 0.3rem; }
+
+/* ---- bubble field: transparent, no clip. The viewBox is sized to this box so
+   the RESTING cluster floats inside it (the area-cap keeps it off the header),
+   but marbles dragged out stay fully visible — no rectangular clip boundary. ---- */
+#bubble-canvas-wrap {
+  position: relative; overflow: visible; isolation: isolate;
+  flex: 1 1 auto; min-height: 0; height: auto;
+  touch-action: none;
+  background: transparent;
+}
+
+#bubbles { position: absolute; inset: 0; z-index: 5; width: 100%; height: 100%; display: block; overflow: visible; cursor: grab; }
+#bubbles.dragging { cursor: grabbing; }
+
+/* ---- bubbles: bright per-wallet hue, translucent, no shine (drift over the photo) ---- */
+.bubble { cursor: grab; }
+.bubble path.body {
+  fill: oklch(0.74 0.16 var(--hue, 250));
+  fill-opacity: 0.9;
+  stroke: var(--ink);
+  stroke-width: 3.5;
+  stroke-linejoin: round; stroke-linecap: round;
+  transition: fill-opacity 0.15s var(--ease), filter 0.15s var(--ease);
+}
+.bubble.hot path.body { fill-opacity: 1; filter: drop-shadow(2px 3px 0 var(--ink)); }
+.bubble text {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  fill: var(--ink); font-weight: 700; pointer-events: none;
+}
+.bubble text.addr { font-size: 11px; font-weight: 700; }
+.bubble text.held { font-size: 10px; opacity: 0.9; }
+
+.tooltip {
+  position: absolute; pointer-events: none; z-index: 6;
+  background: oklch(0.96 0.022 88); color: var(--ink);
+  border: 2.5px solid var(--ink); border-radius: var(--radius-sm);
+  padding: 0.6rem 0.8rem; font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;
+  line-height: 1.5; max-width: 240px; box-shadow: 3px 3px 0 var(--ink);
+}
+.tooltip.hidden { display: none; }
+.tooltip .addr { color: var(--ink); opacity: 0.7; margin-bottom: 0.35rem; }
+.tooltip .row { display: flex; justify-content: space-between; gap: 1.5rem; }
+.tooltip .row .k { color: var(--ink); opacity: 0.7; }
+.tooltip .row .v { color: var(--ink); font-weight: 700; }
+
+/* ---- buttons (the read-only lookup Check) ---- */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.8rem 1.35rem; border-radius: 8px; border: 2.5px solid var(--ink);
+  background: oklch(0.96 0.022 88); color: var(--ink); font: inherit; font-weight: 700;
+  letter-spacing: 0.005em; cursor: pointer; text-decoration: none;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.12s var(--ease), box-shadow 0.12s var(--ease);
+}
+.btn:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+.btn.primary {
+  background: oklch(0.86 0.16 95); color: var(--ink);
+}
+.btn .arrow { opacity: 0.7; transition: transform 0.18s var(--ease); }
+.btn:hover .arrow { transform: translateX(2px); }
+
+/* ---- mascot: two hugging figures, pinned to the bottom-left, decorative ---- */
+.mascot {
+  position: fixed; left: 0; bottom: 0; z-index: 1;
+  width: clamp(240px, 27vw, 460px); height: auto;
+  pointer-events: none; -webkit-user-select: none; user-select: none;
+  filter: drop-shadow(0 6px 18px oklch(0.16 0.03 250 / 0.45));
+}
+
+/* ---- entrance motion ---- */
+.reveal { opacity: 0; transform: translateY(14px); animation: rise 0.7s var(--ease) forwards; }
+.reveal.d1 { animation-delay: 0.05s; }
+.reveal.d2 { animation-delay: 0.12s; }
+.reveal.d3 { animation-delay: 0.19s; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; opacity: 1; transform: none; }
+  .live-dot, .sound-btn.on .eq i { animation: none; }
+  * { scroll-behavior: auto; }
+}
+
+@media (max-width: 620px) {
+  .container { padding: 0 1.25rem; }
+  #bubble-canvas-wrap { min-height: 200px; }
+  .topbar { gap: 0.6rem 1rem; }
+  .topbar-right { flex: 1 1 auto; justify-content: flex-start; padding-top: 0; }
+}

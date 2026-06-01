@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>loyalty: the longer you stay, the more you get</title>
+  <meta name="description" content="Every wallet is a bubble drifting over a sunny meadow. The longer you hold, the bigger it grows and the larger your share of the rewards. Buy size does not matter." />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <img class="mascot" src="/img/hug.png" alt="" aria-hidden="true" />
+  <main class="container wrap lander">
+
+    <header class="topbar">
+      <span class="topbar-right">
+        <a id="community-link" class="community-link hidden" target="_blank" rel="noopener" title="Open this coin's community">Community &rarr;</a>
+        <button id="sound-toggle" class="sound-btn" type="button" aria-pressed="false" title="Ambient meadow sound">
+          <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="sound-label">sound off</span>
+        </button>
+      </span>
+    </header>
+
+    <section class="stage">
+      <div class="stage-head">
+        <h1 class="brandmark reveal">Loyalty</h1>
+        <p class="tagline reveal d1">The longer you stay, the more you get.</p>
+
+        <div class="stats reveal d2" id="stats" aria-live="polite">
+          <div class="stat">
+            <span class="stat-val mono" id="stat-rewards">—</span>
+            <span class="stat-label">Total distributed</span>
+          </div>
+          <div class="stat">
+            <span class="stat-val mono" id="stat-next">—</span>
+            <span class="stat-label">Next distribution</span>
+          </div>
+          <div class="stat">
+            <span class="stat-val mono" id="stat-next-timer">—</span>
+            <span class="stat-label">Distributes in</span>
+          </div>
+          <div class="stat">
+            <span class="stat-val mono" id="stat-holders">—</span>
+            <span class="stat-label">Loyal holders</span>
+          </div>
+        </div>
+
+        <form id="lookup" class="lookup reveal d2" autocomplete="off" novalidate>
+          <input id="lookup-input" class="lookup-input mono" type="text" spellcheck="false"
+                 placeholder="Paste a Solana address to see its loyalty" aria-label="Solana wallet address" />
+          <button id="lookup-go" class="btn primary" type="submit">Check<span class="arrow" aria-hidden="true">&rarr;</span></button>
+        </form>
+        <p class="lookup-error mono hidden" id="lookup-error"></p>
+
+        <div id="lookup-result" class="lookup-result hidden" aria-live="polite">
+          <div class="lr-item lr-wide"><span class="lr-v mono" id="me-wallet">—</span><span class="lr-label">Wallet</span></div>
+          <div class="lr-item"><span class="lr-v mono accent" id="me-held">—</span><span class="lr-label">Held for</span></div>
+          <div class="lr-item"><span class="lr-v mono accent" id="me-rewards">—</span><span class="lr-label">Rewards received</span></div>
+          <div class="lr-item"><span class="lr-v mono accent" id="me-rank">—</span><span class="lr-label">Rank</span></div>
+          <p class="lr-note hidden" id="me-note"></p>
+          <a id="me-post-cta" class="btn primary lr-cta hidden" target="_blank" rel="noopener">Make a post<span class="arrow" aria-hidden="true">&rarr;</span></a>
+        </div>
+      </div>
+
+      <div id="bubble-canvas-wrap" class="scene reveal d3">
+        <svg id="bubbles" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"></svg>
+        <div id="bubble-tooltip" class="tooltip hidden"></div>
+      </div>
+    </section>
+
+  </main>
+  <script src="/bubblemap.js"></script>
+  <script src="/home.js"></script>
+  <script src="/account.js"></script>
+  <script src="/ambient.js"></script>
+  <script src="/parallax.js"></script>
+</body>
+</html>
