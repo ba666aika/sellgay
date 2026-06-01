@@ -175,7 +175,9 @@ def weighted_holdings(state: dict[str, dict]) -> dict[str, int]:
     """USUG payout weight = held_seconds × balance — your share depends on BOTH
     how long AND how much you hold. Same eligibility as eligible_weights
     (held_seconds > 0 and balance at/above the floor). Selling resets held_seconds
-    to 0 → weight 0, so a seller earns nothing.
+    to 0 → weight 0, so a seller earns nothing until it rebuys and re-accrues time
+    (a gay CAN come back to the rewards). The sticky `sold` flag is for the gay
+    LIST only; it does not bar earning.
     """
     out: dict[str, int] = {}
     for wallet, info in state.items():

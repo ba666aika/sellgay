@@ -190,9 +190,27 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/gay":
-            # The gay list: every wallet that ever sold / transferred out (sticky).
+            # The gay list: wallets that ever sold (sticky `sold`) AND are not
+            # currently earning. A seller that rebought and is back in the rewards
+            # shows in NOT GAY instead — so a wallet is never in both columns at
+            # once. Sell again → drops out of the rewards → back on the gay list.
             state = _load_json(os.path.join(DATA_DIR, "loyalty_state.json"), {})
-            gay = sorted(w for w, info in state.items() if info.get("sold"))
+            stats = _load_json(os.path.join(DATA_DIR, "stats.json"), {})
+            min_hold = int(stats.get("min_holding_raw", 0))
+            excluded = set(stats.get("excluded_owners", []))
+
+            def _earning(w: str, info: dict) -> bool:
+                # exactly the NOT-GAY board condition
+                return (
+                    int(info.get("held_seconds", 0)) > 0
+                    and int(info.get("last_balance", 0)) >= min_hold
+                    and w not in excluded
+                )
+
+            gay = sorted(
+                w for w, info in state.items()
+                if info.get("sold") and not _earning(w, info)
+            )
             self._send_json(200, {"count": len(gay), "wallets": gay})
             return
 
