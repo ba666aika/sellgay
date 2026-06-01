@@ -53,13 +53,6 @@ a {text-decoration: none !important;}
 }
 
 /* blocks */
-#home {
-    background-image: url(../img/home.jpeg);
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: bottom;
-}
-
 #blockOne {
     background-image: url(../img/bg_block_one.png);
     background-size: cover;
@@ -652,12 +645,6 @@ https://ryanmulligan.dev/blog/css-property-new-style/
 
 /* queries */
 @media (max-width: 968px) {
-    #home {
-        background-image: url(../img/home.jpeg);
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: left bottom !important;
-    }
     .subtitle {
         transform: rotate(-3deg);
         color: #fff;
@@ -668,8 +655,52 @@ https://ryanmulligan.dev/blog/css-property-new-style/
 
 /* ============ USUG live scoreboard + gay/not-gay boards ============ */
 
-/* shorter brand banner so the live data sits near the top fold */
-.usug-hero { min-height: clamp(320px, 46vh, 600px); }
+/* hero: the party art is the backdrop, the live data floats over it on a veil */
+.usug-hero { display: block; }
+.usug-hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background: url(../img/home.jpeg) center center / cover no-repeat;
+}
+/* keep the art almost fully visible: only a faint darkening at the very top
+   (so the navbar reads) and the very bottom (transition to the next section). */
+.usug-hero-veil {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(180deg,
+        rgba(18,7,48,.52) 0%,
+        rgba(18,7,48,.10) 15%,
+        rgba(18,7,48,0) 32%,
+        rgba(18,7,48,0) 60%,
+        rgba(40,18,104,.45) 100%);
+}
+.usug-hero-content {
+    position: relative; z-index: 3;
+    padding-top: clamp(2.5rem, 7vh, 5rem);
+    padding-bottom: clamp(2.75rem, 8vh, 5.5rem);
+    text-shadow: 0 1px 8px rgba(6,2,24,.6);
+}
+.subtitle.on-photo { color: #fff; }
+
+/* contract address chip + coin-communities pill, up top */
+.usug-toplinks { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; align-items: center; margin: 0 auto .6rem; }
+.usug-ca {
+    display: inline-flex; align-items: center; gap: .55rem; max-width: 100%;
+    background: rgba(10,5,38,.5); border: 1px solid #8000FF; border-radius: 999px;
+    color: #fff; padding: .5rem .95rem; cursor: pointer; font-size: .92rem;
+    transition: border-color .3s cubic-bezier(.16,1,.3,1), box-shadow .3s cubic-bezier(.16,1,.3,1);
+}
+.usug-ca:hover { border-color: #FF00ED; box-shadow: 0 0 16px rgba(255,0,237,.4); }
+.usug-ca i { color: #FF00ED; }
+.usug-ca-label { color: #cbb8ff; letter-spacing: .08em; }
+.usug-ca-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: min(60vw, 360px); }
+.usug-pill {
+    display: inline-flex; align-items: center; gap: .45rem;
+    background: rgba(255,0,237,.14); border: 1px solid rgba(255,0,237,.5); border-radius: 999px;
+    color: #ffd9fb; padding: .5rem .95rem; font-size: .92rem;
+    transition: background .3s cubic-bezier(.16,1,.3,1), box-shadow .3s cubic-bezier(.16,1,.3,1);
+}
+.usug-pill:hover { background: rgba(255,0,237,.26); box-shadow: 0 0 16px rgba(255,0,237,.4); color: #fff; }
+.usug-copied { text-align: center; color: #43e886; min-height: 1.2rem; margin: 0 0 1.25rem; opacity: 0; transition: opacity .3s; }
+.usug-copied.show { opacity: 1; }
 
 /* entrance reveal — opacity/transform only, ease-out-expo. Gated by the
    .usug-js flag (set inline in <head>) so content is never hidden without JS. */
@@ -691,12 +722,14 @@ https://ryanmulligan.dev/blog/css-property-new-style/
     gap: clamp(1.25rem, 3vw, 2.75rem);
     align-items: stretch;
     background:
-        radial-gradient(125% 145% at 0% 0%, rgba(255,0,237,.20), transparent 55%),
-        linear-gradient(180deg, #5A2BB0 0%, #2C1574 100%);
-    border: 3px solid #8A39FF;
+        radial-gradient(125% 145% at 0% 0%, rgba(255,0,237,.16), transparent 55%),
+        linear-gradient(180deg, rgba(46,20,108,.32), rgba(24,11,74,.40));
+    backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
+    border: 1px solid rgba(255,255,255,.22);
     border-radius: 36px;
+    max-width: 940px; margin-left: auto; margin-right: auto;
     padding: clamp(1.5rem, 3vw, 2.75rem);
-    box-shadow: 0 26px 64px rgba(8,3,34,.55), inset 0 0 0 1px rgba(255,255,255,.06);
+    box-shadow: 0 26px 64px rgba(8,3,34,.5), inset 0 0 0 1px rgba(255,255,255,.07);
 }
 @media (max-width: 860px) { .usug-scoreboard { grid-template-columns: 1fr; } }
 
@@ -731,8 +764,8 @@ https://ryanmulligan.dev/blog/css-property-new-style/
 /* divided figure strip — cells split by 1px hairlines, NOT individual cards */
 .usug-score-figs {
     display: flex; align-items: stretch; justify-content: space-evenly;
-    background: rgba(10,5,38,.42);
-    border: 1px solid rgba(255,255,255,.12); border-radius: 24px;
+    background: rgba(8,4,32,.18);
+    border: 1px solid rgba(255,255,255,.16); border-radius: 24px;
     padding: 1.25rem .5rem;
 }
 .usug-fig { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: .25rem .4rem; }
@@ -745,10 +778,11 @@ https://ryanmulligan.dev/blog/css-property-new-style/
 .usug-fig--gay .usug-fig-num { color: #FF00ED; text-shadow: 0 0 16px rgba(255,0,237,.6); }
 
 /* boards */
-.usug-boards { margin-top: clamp(.5rem, 2vh, 1.25rem); }
+.usug-boards { margin-top: clamp(.5rem, 2vh, 1.25rem); max-width: 940px; margin-left: auto; margin-right: auto; }
 .usug-board {
-    background: linear-gradient(180deg, #4A1CA3 0%, #221375 100%);
-    border: 2px solid #8000FF;
+    background: linear-gradient(180deg, rgba(46,18,118,.32), rgba(20,10,78,.42));
+    backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
+    border: 1px solid rgba(255,255,255,.18);
     border-radius: 28px;
     padding: 1.25rem 1.25rem 1.5rem;
     height: 100%;

@@ -164,8 +164,42 @@
     });
   }
 
+  // Drive every mint-dependent bit of UI off /api/meta so the operator only
+  // sets LOYALTY_MINT once (in Railway) and the CA, the Coin Communities link
+  // and the Buy link all update. Falls back to the HTML placeholder if unset.
+  function applyMeta(meta) {
+    var mint = (meta && meta.mint) ? String(meta.mint).trim() : '';
+    if (!mint) return;
+    var base = (meta && meta.community_base) ? meta.community_base : 'https://coincommunities.org/communities/';
+
+    document.querySelectorAll('.usug-ca[data-copy]').forEach(function (el) { el.setAttribute('data-copy', mint); });
+    document.querySelectorAll('[data-ca-text]').forEach(function (el) { el.textContent = mint; });
+    var legacy = $('copyTextElement');
+    if (legacy) { legacy.setAttribute('data-fulltext', mint); legacy.textContent = mint; }
+
+    var community = $('community-link');
+    if (community) community.href = base + mint;
+    var buy = $('buy-link');
+    if (buy) buy.href = 'https://pump.fun/coin/' + mint;
+  }
+
+  function initCopy() {
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest ? e.target.closest('.usug-ca') : null;
+      if (!el) return;
+      var text = el.getAttribute('data-copy') || '';
+      if (!text || !navigator.clipboard) return;
+      navigator.clipboard.writeText(text).then(function () {
+        var m = $('copyMsgTop');
+        if (m) { m.classList.add('show'); setTimeout(function () { m.classList.remove('show'); }, 1600); }
+      }).catch(function () {});
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     initReveal();
+    initCopy();
+    getJSON('/api/meta').then(applyMeta);
     refresh();
     setInterval(tick, 1000);
     setInterval(refresh, REFRESH_MS);

@@ -64,7 +64,7 @@
       <!-- Remove "navbar-sticky" class to make navigation bar scrollable with the page -->
       <header class="header navbar navbar-expand-lg navbar-dark position-absolute navbar-sticky navbar-stuck">
         <div class="container px-3">
-          <a href="https://usellugay.fun/index.html" class="navbar-brand pe-3">
+          <a href="/" class="navbar-brand pe-3">
             <img src="/assets/logo.svg" width="47" alt="USUG">
           </a>
           <div id="navbarNav" class="offcanvas offcanvas-end bg-dark">
@@ -87,7 +87,7 @@
               </ul>
             </div>
             <div class="offcanvas-header border-top border-light">
-              <a href="https://pump.fun/coin/8hZ2o1MTQ1SBgBJB2UhbNufh4V5D3S5uSggwUysdpump" target="_blank" class="shiny-cta w-100 text-center">
+              <a id="buy-link" href="https://pump.fun/coin/8hZ2o1MTQ1SBgBJB2UhbNufh4V5D3S5uSggwUysdpump" target="_blank" class="shiny-cta w-100 text-center">
                 <span>Buy $USUG</span>
               </a>
             </div>      
@@ -102,26 +102,35 @@
         
       </header>
 
-      <!-- Hero -->
-      <section id="home" class="position-relative overflow-hidden usug-hero">
-
-        
+      <!-- Hero: the live scoreboard floating over the party art -->
+      <section id="home" class="usug-hero position-relative overflow-hidden border-bottom-pink">
+        <div class="usug-hero-bg" aria-hidden="true"></div>
+        <div class="usug-hero-veil" aria-hidden="true"></div>
 
         <div class="pyro">
           <div class="before"></div>
           <div class="after"></div>
         </div>
-      </section>
 
-
-      <!-- LIVE: airdrop scoreboard + gay/not-gay boards (the data, up top) -->
-      <section id="airdrops" class="usug-live position-relative border-top-pink border-bottom-pink">
-        <div class="container position-relative zindex-5">
+        <div id="airdrops" class="usug-hero-content container position-relative">
 
           <div class="text-center pb-4">
             <h2 class="display-1 bluby">The scoreboard</h2>
-            <p class="lead mb-0 subtitle">Live from the chain. <span class="hilight">Updated every tick.</span></p>
+            <p class="lead mb-0 subtitle on-photo">Live from the chain. <span class="hilight">Updated every tick.</span></p>
           </div>
+
+          <!-- contract address + community, right up top -->
+          <div class="usug-toplinks">
+            <button type="button" class="usug-ca" data-copy="8hZ2o1MTQ1SBgBJB2UhbNufh4V5D3S5uSggwUysdpump" title="Copy contract address">
+              <i class="bx bxs-copy"></i>
+              <span class="usug-ca-label number">CA</span>
+              <span class="usug-ca-text number" data-ca-text>8hZ2o1MTQ1SBgBJB2UhbNufh4V5D3S5uSggwUysdpump</span>
+            </button>
+            <a id="community-link" class="usug-pill number" href="https://coincommunities.org/communities/8hZ2o1MTQ1SBgBJB2UhbNufh4V5D3S5uSggwUysdpump" target="_blank" rel="noopener">
+              <i class="bx bxs-group"></i> Coin Communities
+            </a>
+          </div>
+          <div id="copyMsgTop" class="usug-copied number">contract copied, chad</div>
 
           <!-- scoreboard: dominant countdown + divided figure strip -->
           <div class="usug-scoreboard reveal">
@@ -148,10 +157,7 @@
           </div>
 
           <!-- boards: who's straight (earning) vs who's gay (sold) -->
-          <div id="leaderboard" class="text-center pt-5 pb-3">
-            <h3 class="display-2 bluby">Gay or not?</h3>
-          </div>
-          <div class="row g-4 justify-content-center usug-boards reveal">
+          <div id="leaderboard" class="row g-4 justify-content-center usug-boards reveal pt-5">
             <div class="col-lg-6">
               <div class="usug-board usug-board--straight h-100">
                 <div class="usug-board-head">
