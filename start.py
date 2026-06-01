@@ -37,10 +37,25 @@ def main() -> NoReturn:
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
 
+    # Defense in depth: the WEB is the only process that listens on a socket, and
+    # it never needs a secret (it imports only bot.ranking, never bot.config). So
+    # it gets an environment with every secret stripped out — an exploit of the
+    # network-exposed process cannot read a key that simply isn't there. Keeps the
+    # money-capable surface (bot) and the network-exposed surface (web) disjoint.
+    # (Jobcoin lesson: an open endpoint must never be one hop from the wallet key.)
+    _WEB_SECRET_DENYLIST = (
+        "WALLET_PRIVATE_KEY",
+        "HELIUS_API_KEY",
+        "RPC_URL",                    # embeds the Helius key
+        "COINCOMMUNITIES_API_KEY",
+        "COINCOMMUNITIES_API_SECRET",
+    )
+    web_env = {k: v for k, v in env.items() if k not in _WEB_SECRET_DENYLIST}
+
     web_cmd = [sys.executable, "-u", "server.py"]
     bot_cmd = [sys.executable, "-u", "-m", "bot"]
 
-    web = _spawn(web_cmd, env)
+    web = _spawn(web_cmd, web_env)
     bot = _spawn(bot_cmd, env)
 
     def shutdown(signum: int, _frame) -> None:
