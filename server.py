@@ -196,6 +196,39 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(200, {"count": len(gay), "wallets": gay})
             return
 
+        if path == "/api/board":
+            # NOT-GAY leaderboard: proportional share = held_seconds × balance —
+            # the exact weight the engine pays airdrops on (matches /api/holder).
+            state = _load_json(os.path.join(DATA_DIR, "loyalty_state.json"), {})
+            stats = _load_json(os.path.join(DATA_DIR, "stats.json"), {})
+            min_hold = int(stats.get("min_holding_raw", 0))
+            excluded = set(stats.get("excluded_owners", []))
+            wmap: dict[str, int] = {}
+            bmap: dict[str, int] = {}
+            hmap: dict[str, int] = {}
+            for w, info in state.items():
+                h = int(info.get("held_seconds", 0))
+                b = int(info.get("last_balance", 0))
+                if h <= 0 or b < min_hold or w in excluded:
+                    continue
+                wmap[w] = h * b
+                bmap[w] = b
+                hmap[w] = h
+            total_w = sum(wmap.values())
+            rows = []
+            for rank, (w, weight) in enumerate(
+                sorted(wmap.items(), key=lambda kv: kv[1], reverse=True), start=1
+            ):
+                rows.append({
+                    "wallet": w,
+                    "rank": rank,
+                    "share_bps": int(weight * 10000 / total_w) if total_w else 0,
+                    "held_seconds": hmap[w],
+                    "balance": bmap[w],
+                })
+            self._send_json(200, {"total_holders": len(wmap), "holders": rows[:HOLDERS_API_TOP_N]})
+            return
+
         # Static.
         if path == "/" or path == "":
             self._send_file(os.path.join(FRONTEND_DIR, "index.html"), "text/html; charset=utf-8")

@@ -46,6 +46,8 @@
 
     <script src="/assets/boxicons.js"></script>
     <script src="/assets/confetti.browser.js"></script>
+    <!-- progressive-enhancement flag: gates reveal animations so content is never hidden without JS -->
+    <script>document.documentElement.className += ' usug-js';</script>
 
 
   </head>
@@ -74,7 +76,10 @@
               <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
                 <li class="nav-item">
-                  <a href="https://dexscreener.com/solana/" target="_blank" class="nav-link">Dexscreener</a>
+                  <a href="#airdrops" class="nav-link">Airdrops</a>
+                </li>
+                <li class="nav-item">
+                  <a href="#leaderboard" class="nav-link">Gay or not</a>
                 </li>
                 <li class="nav-item">
                   <a href="https://x.com/USUG26" target="_blank" class="nav-link">X</a>
@@ -82,20 +87,12 @@
               </ul>
             </div>
             <div class="offcanvas-header border-top border-light">
-              <a href="https://dexscreener.com/solana/bfvtihksjxhamasqzqgaqkal7rbvaru37dhacvjiusmf" target="_blank" class="shiny-cta w-100 text-center">
+              <a href="https://pump.fun/coin/8hZ2o1MTQ1SBgBJB2UhbNufh4V5D3S5uSggwUysdpump" target="_blank" class="shiny-cta w-100 text-center">
                 <span>Buy $USUG</span>
               </a>
             </div>      
           </div>
 
-
-            <a onclick="openModal()" class="shiny-cta mt-2 d-flex align-items-center justify-content-end" style="padding: 5px 20px 5px 5px;">
-              <div class="position-relative d-flex flex-column align-items-center justify-content-center">
-                <i class="bx bx-play position-absolute fs-lg"></i>
-                <img class="img-fluid rounded-circle me-2 bg-dark" src="/assets/vid.png" width="40px" alt="out of order video about USUG">
-              </div>
-              <span>Watch the video</span>
-            </a>
 
             <button type="button" class="navbar-toggler" data-bs-toggle="offcanvas" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
@@ -106,7 +103,7 @@
       </header>
 
       <!-- Hero -->
-      <section id="home" class="position-relative overflow-hidden vh-100">
+      <section id="home" class="position-relative overflow-hidden usug-hero">
 
         
 
@@ -115,7 +112,73 @@
           <div class="after"></div>
         </div>
       </section>
-      
+
+
+      <!-- LIVE: airdrop scoreboard + gay/not-gay boards (the data, up top) -->
+      <section id="airdrops" class="usug-live position-relative border-top-pink border-bottom-pink">
+        <div class="container position-relative zindex-5">
+
+          <div class="text-center pb-4">
+            <h2 class="display-1 bluby">The scoreboard</h2>
+            <p class="lead mb-0 subtitle">Live from the chain. <span class="hilight">Updated every tick.</span></p>
+          </div>
+
+          <!-- scoreboard: dominant countdown + divided figure strip -->
+          <div class="usug-scoreboard reveal">
+            <div class="usug-score-timer">
+              <div class="usug-live-kicker number"><span class="usug-dot"></span>Live · pays every 5 min</div>
+              <div class="usug-card-label number">Next airdrop drops in</div>
+              <div id="airdrop-timer" class="usug-timer number">--:--</div>
+              <p class="usug-card-sub mb-0">Hold and get paid pro-rata. Sell and you get <span class="hilight">nothing</span>.</p>
+            </div>
+            <div class="usug-score-figs">
+              <div class="usug-fig">
+                <div id="stat-holders" class="usug-fig-num number" data-val="0">0</div>
+                <div class="usug-fig-label number">straight holders</div>
+              </div>
+              <div class="usug-fig usug-fig--gay">
+                <div id="stat-gays" class="usug-fig-num number" data-val="0">0</div>
+                <div class="usug-fig-label number">gays (sold)</div>
+              </div>
+              <div class="usug-fig">
+                <div class="usug-fig-num number">50K</div>
+                <div class="usug-fig-label number">min to qualify</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- boards: who's straight (earning) vs who's gay (sold) -->
+          <div id="leaderboard" class="text-center pt-5 pb-3">
+            <h3 class="display-2 bluby">Gay or not?</h3>
+          </div>
+          <div class="row g-4 justify-content-center usug-boards reveal">
+            <div class="col-lg-6">
+              <div class="usug-board usug-board--straight h-100">
+                <div class="usug-board-head">
+                  <span class="usug-board-title number">NOT GAY</span>
+                  <span class="usug-board-tag number">holding &amp; earning</span>
+                </div>
+                <ol id="notgay-list" class="usug-list number">
+                  <li class="usug-empty">Loading chads…</li>
+                </ol>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="usug-board usug-board--gay h-100">
+                <div class="usug-board-head">
+                  <span class="usug-board-title number">GAY</span>
+                  <span class="usug-board-tag number">sold / paper hands</span>
+                </div>
+                <ol id="gay-list" class="usug-list number">
+                  <li class="usug-empty">Loading…</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
 
       <!-- block 1 -->
       <section id="blockOne" class="position-relative py-5 border-top-pink">
@@ -378,72 +441,6 @@
 
       </section>
 
-            <!-- block 4 -->
-            <section id="blockFour" class="position-relative pt-5 border-bottom-pink">
-              <div class="container position-relative zindex-5 pb-md-4">
-                <div class="row justify-content-center pb-3 mb-sm-2 mb-lg-3">
-                  <div class="col-xl-12 text-center">
-                    <h2 class="display-1 mb-lg-4 bluby">They support USUG</h2>
-                    <p class="lead mb-0 subtitle">First-time<span class="hilight">chads in</span> forever.</p>
-                  </div>
-                 
-
-                  <div class="col-lg-8 mt-5">
-                   <div class="row my-4 align-items-center d-flex">
-                      <div class="col-md-6 col-12">
-                        <img src="/assets/outoforderbig.png" alt="Out of Order" class="img-fluid">
-                      </div>
-                      <div class="col-md-6 col-12 align-items-start">
-                        <h3 class="text-white text-uppercase h1 mb-0">Out of Order</h3>
-                        <p class="number fs-md dark" style="font-weight: 600;"><span class="hilight">@outttoforderrr</span> - 49.2K Followers</p>
-                        <p class="bluelight">
-                          They're behind one of the funniest videos in crypto. Their sketch has been seen nearly two million times and is mostly about $USUG. 
-                        </p>
-
-                       
-                        <button class="shiny-cta" onclick="openModal()">
-                          <span>Check the video</span>
-                        </button>
-                      
-                        <!-- Modale personnalisée -->
-                        <div class="custom-modal" id="customModal">
-                          <div class="custom-modal-content">
-
-                            <h2 class="text-light">The Shitcoin Advisor</h2>
-                            
-                            <video id="modalVideo" controls="" style="width: 100%;">
-                              <source src="video/usug.mp4" type="video/mp4">
-                            </video>
-
-                            <button type="button" class="btn btn-outline-primary rounded-pill number mt-2" onclick="closeModal()">Close the video</button>
-
-                          </div>
-                        </div>
-
-                      </div>
-                   </div>
-                  </div>
-
-                  <div class="col-lg-8 mt-5">
-                    <div class="row my-4 align-items-center d-flex">
-                       
-                       <div class="col-md-6 col-12  align-items-end d-flex flex-column">
-                         <h3 class="text-white text-uppercase h1 mb-0">Eric Cryptoman</h3>
-                         <p class="number fs-md dark" style="font-weight: 600;"><span class="hilight">@EricCryptoman</span> - 234K Followers</p>
-                         <p class="bluelight text-end">
-                           Eric is the straightest chad in the space. He holds $USUG since day one and never sold a penny.
-                         </p>
-                       </div>
-                       <div class="col-md-6 col-12">
-                        <img src="/assets/ericbig.png" alt="Eric Cryptoman" class="img-fluid">
-                      </div>
-                    </div>
-                   </div>
-      
-              </div>
-            </div></section>
-
-
             <!-- block 5 -->
             <section id="blockFive" class="position-relative">
               <div class="container-fluid position-relative zindex-5 px-0 mt-5">
@@ -606,32 +603,8 @@
       });
       </script>
 
-      <!-- modal -->
-      <script>
-        // Fonction pour ouvrir la modale
-        function openModal() {
-          const modal = document.getElementById("customModal");
-          const video = document.getElementById("modalVideo");
-          modal.style.display = "flex";
-          video.play(); // Démarre la vidéo seulement quand la modale est affichée
-        }
-    
-        // Fonction pour fermer la modale
-        function closeModal() {
-          const modal = document.getElementById("customModal");
-          const video = document.getElementById("modalVideo");
-          modal.style.display = "none";
-          video.pause(); // Met la vidéo en pause
-          video.currentTime = 0; // Réinitialise la vidéo
-        }
-    
-        // Gérer la pression de la touche Échap pour fermer la modale
-        window.addEventListener('keydown', function(event) {
-          if (event.key === "Escape") {
-            closeModal();
-          }
-        });
-      </script>
+      <!-- live engine widgets: airdrop timer + NOT GAY / GAY boards -->
+      <script src="/assets/usug.js"></script>
 
-  
+
 <iframe scrolling="no" frameborder="0" allowtransparency="true" src="/assets/widget_iframe.1227a5674072e080ffb1ba14ac0c1079.html" title="Twitter settings iframe" style="display: none;"></iframe></body></html>
